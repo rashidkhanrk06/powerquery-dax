@@ -1,0 +1,18 @@
+let
+    Source = Excel.CurrentWorkbook(){[Name="Sales"]}[Content],
+    ColumnsName = Table.ColumnNames( Source ),
+
+    TransformColNames = List.Transform( ColumnsName, each {_, Text.Combine(
+                Splitter.SplitTextByCharacterTransition(
+                    {"a".."z"},{"A".."Z"})(_)," ")}),
+
+    DateType = List.Transform( Record.ToList( Source{ 0 } ), each Value.Type(_)),
+
+    ColNamesDataTypes = List.Transform( TransformColNames, each {_{1},
+			 DateType { List.PositionOf(TransformColNames,_)}}),
+
+    RenameColumns = Table.RenameColumns(Source,TransformColNames),
+
+    ChangeDataType = Table.TransformColumnTypes( RenameColumns, ColNamesDataTypes)
+in
+    ChangeDataType
